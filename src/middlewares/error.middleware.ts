@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import env from "../config/env.js";
-import logger from "../utils/logger.js";
+import env from "../config/env.ts";
+import logger from "../utils/logger.ts";
 
 const errorMiddleware = (error: any, req: Request, res: Response, next: NextFunction) => {
   let statusCode = error.statusCode || 500;

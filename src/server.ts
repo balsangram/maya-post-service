@@ -1,7 +1,7 @@
 import http from "http";
 import app from "./app.ts";
 import connectDB from "./config/db.ts";
-import env from "./config/env.js";
+import env from "./config/env.ts";
 import logger from "./utils/logger.ts";
 
 

@@ -3,7 +3,7 @@ import { Readable } from "stream";
 import fs from "fs";
 import type { Express } from "express";
 
-import env from "../config/env.js";
+import env from "../config/env.ts";
 
 // ======================================================
 // Cloudinary Configuration
