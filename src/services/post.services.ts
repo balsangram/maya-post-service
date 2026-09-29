@@ -6,14 +6,14 @@ import {
   findPostByIdRepository,
   findPostsRepository,
   updatePostRepository,
-} from "../repositories/post.repository.js";
+} from "../repositories/post.repository.ts";
 
 import {
   deleteFromCloudinary,
   uploadToCloudinary,
-} from "../utils/cloudinary.js";
+} from "../utils/cloudinary.ts";
 
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError.ts";
 
 // ======================================================
 // Types

@@ -9,7 +9,7 @@ import {
   deletePost,
   displayPosts,
   editPost,
-} from "../controllers/post.controller.js";
+} from "../controllers/post.controller.ts";
 
 const router = express.Router();
 
