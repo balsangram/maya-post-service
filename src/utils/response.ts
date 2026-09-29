@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import ApiError, { ErrorResponse } from "./ApiError.js";
+import ApiError, { ErrorResponse } from "./ApiError.ts";
 
 export { ApiError, ErrorResponse };
 

@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 import fs from "fs";
+import type { Express } from "express";
 
 import env from "../config/env.js";
 
@@ -44,6 +45,7 @@ export const uploadToCloudinary = async (
 
   if (
     typeof fileOrPath === "object" &&
+    "buffer" in fileOrPath &&
     fileOrPath.buffer
   ) {
     return new Promise<CloudinaryUploadResult>(
@@ -95,54 +97,54 @@ export const uploadToCloudinary = async (
       ? fileOrPath
       : fileOrPath.path;
 
-  if (filePath) {
-    try {
-      const result =
-        await cloudinary.uploader.upload(
-          filePath,
-          {
-            folder,
-            resource_type: "auto",
-          }
-        );
-
-      // ----------------------------------------------
-      // Remove local file after successful upload
-      // ----------------------------------------------
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      return {
-        url: result.secure_url,
-        publicId: result.public_id,
-        resourceType: result.resource_type,
-      };
-    } catch (error: unknown) {
-      // ----------------------------------------------
-      // Remove local file even if upload fails
-      // ----------------------------------------------
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      if (error instanceof Error) {
-        throw new Error(
-          `Cloudinary upload failed: ${error.message}`
-        );
-      }
-
-      throw new Error(
-        "Cloudinary upload failed"
-      );
-    }
+  if (!filePath) {
+    throw new Error(
+      "Invalid file format provided for upload"
+    );
   }
 
-  throw new Error(
-    "Invalid file format provided for upload"
-  );
+  try {
+    const result =
+      await cloudinary.uploader.upload(
+        filePath,
+        {
+          folder,
+          resource_type: "auto",
+        }
+      );
+
+    // ==================================================
+    // Remove local file after successful upload
+    // ==================================================
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      resourceType: result.resource_type,
+    };
+  } catch (error: unknown) {
+    // ==================================================
+    // Remove local file even if upload fails
+    // ==================================================
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    if (error instanceof Error) {
+      throw new Error(
+        `Cloudinary upload failed: ${error.message}`
+      );
+    }
+
+    throw new Error(
+      "Cloudinary upload failed"
+    );
+  }
 };
 
 // ======================================================
@@ -179,5 +181,9 @@ export const deleteFromCloudinary = async (
     );
   }
 };
+
+// ======================================================
+// Export Cloudinary Instance
+// ======================================================
 
 export default cloudinary;
