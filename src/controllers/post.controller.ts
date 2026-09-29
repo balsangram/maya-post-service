@@ -3,8 +3,8 @@ import {
   deletePostService,
   displayPostsService,
   editPostService,
-  UploadedFiles,
-  PostType,
+  type UploadedFiles,
+  type PostType,
 } from "../services/post.services.ts";
 
 import asyncHandler from "../utils/asyncHandler.ts";
@@ -17,7 +17,7 @@ import {
   successResponse,
 } from "../utils/response.ts";
 
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
 // ==============================
 // Create Post

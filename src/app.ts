@@ -1,4 +1,4 @@
-import express ,{Request , Response ,NextFunction} from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 
 import corsMiddleware from "./middlewares/cors.middleware.ts";
 import postRoutes from "./routes/post.routes.ts";
