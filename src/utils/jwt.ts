@@ -12,7 +12,7 @@ export const generateAccessToken = (user : any) => {
     payload,
     env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: env.ACCESS_TOKEN_EXPIRES_IN,
+      expiresIn: env.ACCESS_TOKEN_EXPIRES_IN as any,
     }
   );
 };
@@ -28,7 +28,7 @@ export const generateRefreshToken = (user : any) => {
     payload,
     env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: env.REFRESH_TOKEN_EXPIRES_IN,
+      expiresIn: env.REFRESH_TOKEN_EXPIRES_IN as any,
     }
   );
 };

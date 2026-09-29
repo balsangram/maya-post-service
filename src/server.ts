@@ -9,17 +9,35 @@ let server : http.Server | undefined;
 
 const startServer = async () => {
   try {
-    // Auth service connects to DB
+    // Post service connects to DB
     await connectDB();
 
     server = http.createServer(app);
 
     server.listen(
-      { port : env.PORT, 
-        host : "0.0.0.0"
-      }, () => {
-      console.log(`🔐 Auth Service running on port ${env.PORT}`);
-    });
+      {
+        port: env.PORT,
+        host: "0.0.0.0",
+      },
+      () => {
+        logger.info(`🚀 Post Service running on port ${env.PORT}`);
+      }
+    );
+
+    const shutdown = async (signal: string) => {
+      logger.info(`Received ${signal}. Shutting down gracefully...`);
+      if (server) {
+        server.close(() => {
+          logger.info("HTTP server closed.");
+          process.exit(0);
+        });
+      } else {
+        process.exit(0);
+      }
+    };
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
   } catch (error) {
     logger.error("Server startup failed:", error);
     process.exit(1);

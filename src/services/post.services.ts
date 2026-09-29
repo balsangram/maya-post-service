@@ -24,7 +24,7 @@ interface Media {
   mediaId: string;
 }
 
-interface UploadedFiles {
+export interface UploadedFiles {
   images?: Express.Multer.File[];
   videos?: Express.Multer.File[];
 }
@@ -477,12 +477,12 @@ export const editPostService = async (
           );
         }
 
-        oldImages.push(
-          updatedImages[imageIndex]
-        );
-
-        updatedImages[imageIndex] =
-          uploadedImages[i];
+        const existingImage = updatedImages[imageIndex];
+        const newImage = uploadedImages[i];
+        if (existingImage && newImage) {
+          oldImages.push(existingImage);
+          updatedImages[imageIndex] = newImage;
+        }
       }
     } catch (error: unknown) {
       await deleteMedia(uploadedImages);
@@ -528,12 +528,12 @@ export const editPostService = async (
           );
         }
 
-        oldVideos.push(
-          updatedVideos[videoIndex]
-        );
-
-        updatedVideos[videoIndex] =
-          uploadedVideos[i];
+        const existingVideo = updatedVideos[videoIndex];
+        const newVideo = uploadedVideos[i];
+        if (existingVideo && newVideo) {
+          oldVideos.push(existingVideo);
+          updatedVideos[videoIndex] = newVideo;
+        }
       }
     } catch (error: unknown) {
       await deleteMedia(uploadedVideos);

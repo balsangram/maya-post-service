@@ -3,6 +3,8 @@ import {
   deletePostService,
   displayPostsService,
   editPostService,
+  UploadedFiles,
+  PostType,
 } from "../services/post.services.ts";
 
 import asyncHandler from "../utils/asyncHandler.ts";
@@ -27,7 +29,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
   await createPostService(
     userId,
     req.body,
-    req.files
+    (req.files as unknown as UploadedFiles) || {}
   );
 
   return successResponse(
@@ -44,7 +46,11 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
 
 export const editPost = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user.id;
-  const { postId } = req.params;
+  const postId = String(req.params.postId || "");
+
+  if (!postId) {
+    throw ApiError.badRequest("Post ID is required");
+  }
 
   console.log("User ID:", userId);
   console.log("Post ID:", postId);
@@ -53,7 +59,7 @@ export const editPost = asyncHandler(async (req: Request, res: Response) => {
     userId,
     postId,
     req.body,
-    req.files || {}
+    (req.files as unknown as UploadedFiles) || {}
   );
 
   return successResponse(
@@ -69,8 +75,11 @@ export const editPost = asyncHandler(async (req: Request, res: Response) => {
 
 export const deletePost = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user.id;
+  const postId = String(req.params.postId || "");
 
-  const { postId } = req.params;
+  if (!postId) {
+    throw ApiError.badRequest("Post ID is required");
+  }
 
   await deletePostService(
     userId,
@@ -112,8 +121,8 @@ export const displayPosts = asyncHandler(async (req: Request, res: Response) => 
   }
 
   const pagination = getPagination(
-    page as number,
-    limit as number
+    Number(page) || 1,
+    Number(limit) || 10
   );
 
   const {
@@ -121,7 +130,7 @@ export const displayPosts = asyncHandler(async (req: Request, res: Response) => 
     total,
   } = await displayPostsService(
     userId,
-    type,
+    type as PostType,
     pagination.page,
     pagination.limit
   );

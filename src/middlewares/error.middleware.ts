@@ -17,7 +17,7 @@ const errorMiddleware = (error: any, req: Request, res: Response, next: NextFunc
   else if (error.name === "ValidationError") {
     statusCode = 400;
     message = "Validation failed";
-    errors = Object.values(error.errors || {}).map((err) => err.message);
+    errors = Object.values(error.errors || {}).map((err: any) => err.message);
   }
 
   // Mongoose Duplicate Key Error
@@ -49,7 +49,7 @@ const errorMiddleware = (error: any, req: Request, res: Response, next: NextFunc
   }
 
   // SyntaxError in request body parsing (JSON)
-  else if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+  else if (error instanceof SyntaxError && (error as any).status === 400 && "body" in error) {
     statusCode = 400;
     message = "Malformed JSON in request body";
   }

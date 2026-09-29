@@ -1,7 +1,16 @@
-import {Request ,Response , NextFunction} from "express";
-import { verifyAccessToken } from "../utils/jwt.js";
+import {
+  Request,
+  Response,
+  NextFunction,
+} from "express";
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+import { verifyAccessToken } from "../utils/jwt.ts";
+
+const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -21,7 +30,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    const decoded = verifyAccessToken(token);
+    const decoded = verifyAccessToken(token) as unknown as Express.User;
 
     req.user = decoded;
 
@@ -35,4 +44,5 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export { authMiddleware as verifyToken };
+
 export default authMiddleware;

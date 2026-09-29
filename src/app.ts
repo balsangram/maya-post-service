@@ -20,6 +20,21 @@ app.use(express.urlencoded({ extended: true }));
    Health Check
 ============================== */
 
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    service: "Post Service",
+    status: "healthy",
+  });
+});
+
+app.get("/health", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: "Post Service API is running",
+  });
+});
+
 app.get("/post/health", (req : Request, res : Response) => {
   res.json({
     success: true,

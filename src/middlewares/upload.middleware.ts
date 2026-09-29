@@ -48,7 +48,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     cb(
       new Error(
         `Unsupported file type: ${file.mimetype}. Please upload a valid image, video, audio, or document.`
-      ),
+      ) as any,
       false
     );
   }

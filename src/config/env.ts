@@ -12,8 +12,8 @@ const getRequiredEnvVar = (key: string): string => {
 
 const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: process.env.AUTH_SERVICE_PORT || process.env.PORT || 7001,
-  MONGO_URI: process.env.AUTH_MONGO_URI || process.env.MONGO_URI || getRequiredEnvVar("MONGO_URI"),
+  PORT: Number(process.env.PORT || process.env.POST_SERVICE_PORT || process.env.AUTH_SERVICE_PORT || 7003),
+  MONGO_URI: process.env.POST_MONGO_URI || process.env.MONGO_URI || process.env.AUTH_MONGO_URI || getRequiredEnvVar("MONGO_URI"),
   CLIENT_URL: process.env.CLIENT_URL,
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || getRequiredEnvVar("ACCESS_TOKEN_SECRET"),
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || "1h",
