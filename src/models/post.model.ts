@@ -1,28 +1,46 @@
 import mongoose, {
-  type Document,
-  type Model,
+  Document,
+  Model,
   Schema,
   Types,
 } from "mongoose";
 
-// ==============================
-// Media Type
-// ==============================
+/* =========================
+   Media
+========================= */
 
 export interface IMedia {
   url: string;
   mediaId: string;
 }
 
-// ==============================
-// Post Type
-// ==============================
+/* =========================
+   Like
+========================= */
+
+export interface IPostLike {
+  userId: Types.ObjectId;
+  createdAt: Date;
+}
+
+/* =========================
+   Comment
+========================= */
+
+export interface IPostComment {
+  userId: Types.ObjectId;
+  comment: string;
+  createdAt: Date;
+}
+
+/* =========================
+   Post
+========================= */
 
 export interface IPost {
   userId: Types.ObjectId;
 
   description: string;
-
   locationLink: string;
 
   food: "veg" | "nonveg" | "all";
@@ -44,31 +62,27 @@ export interface IPost {
   genderPreference: "girl" | "boy" | "both";
 
   minAge: number;
-
   maxAge: number;
 
   problems: string[];
 
   images: IMedia[];
-
   videos: IMedia[];
+
+  likes: IPostLike[];
+  comments: IPostComment[];
 
   isActive: boolean;
 
   createdAt?: Date;
-
   updatedAt?: Date;
 }
 
-// ==============================
-// Post Document
-// ==============================
-
 export interface IPostDocument extends IPost, Document {}
 
-// ==============================
-// Media Schema
-// ==============================
+/* =========================
+   Media Schema
+========================= */
 
 const mediaSchema = new Schema<IMedia>(
   {
@@ -87,9 +101,58 @@ const mediaSchema = new Schema<IMedia>(
   }
 );
 
-// ==============================
-// Post Schema
-// ==============================
+/* =========================
+   Like Schema
+========================= */
+
+const likeSchema = new Schema<IPostLike>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+/* =========================
+   Comment Schema
+========================= */
+
+const commentSchema = new Schema<IPostComment>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    _id: true,
+  }
+);
+
+/* =========================
+   Post Schema
+========================= */
 
 const postSchema = new Schema<IPostDocument>(
   {
@@ -180,22 +243,29 @@ const postSchema = new Schema<IPostDocument>(
       default: [],
     },
 
+    likes: {
+      type: [likeSchema],
+      default: [],
+    },
+
+    comments: {
+      type: [commentSchema],
+      default: [],
+    },
+
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
   },
+
   {
     timestamps: true,
   }
 );
 
-// ==============================
-// Model
-// ==============================
-
-const Post: Model<IPostDocument> = mongoose.model<
-  IPostDocument
->("Post", postSchema);
+const Post: Model<IPostDocument> =
+  mongoose.model<IPostDocument>("Post", postSchema);
 
 export default Post;

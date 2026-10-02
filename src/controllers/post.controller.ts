@@ -2,6 +2,7 @@ import {
   createPostService,
   deletePostService,
   displayPostsService,
+  displayRecommendedPostsService,
   editPostService,
   type UploadedFiles,
   type PostType,
@@ -18,6 +19,7 @@ import {
 } from "../utils/response.ts";
 
 import type { Request, Response } from "express";
+import { searchPostsRepository } from "../repositories/post.repository.ts";
 
 // ==============================
 // Create Post
@@ -95,7 +97,7 @@ export const deletePost = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // ==============================
-// Display Posts
+// Display Post s
 // ==============================
 
 export const displayPosts = asyncHandler(async (req: Request, res: Response) => {
@@ -145,3 +147,72 @@ export const displayPosts = asyncHandler(async (req: Request, res: Response) => 
     200
   );
 });
+
+export const searchPosts = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { query = "", page = 1, limit = 10 } = req.query;
+
+    if (!query) {
+      throw ApiError.badRequest("Search query is required");
+    }
+
+    const pagination = getPagination(
+      Number(page) || 1,
+      Number(limit) || 10
+    );
+
+    const skip =
+      (pagination.page - 1) * pagination.limit;
+
+    const { posts, total } =
+      await searchPostsRepository(
+        query as string,
+        skip,
+        pagination.limit
+      );
+
+    return paginationResponse(
+      res,
+      "Posts retrieved successfully",
+      posts,
+      pagination.page,
+      pagination.limit,
+      total,
+      200
+    );
+  }
+);
+
+// ==============================
+// Recommended Posts
+// ==============================
+
+export const displayRecommendedPosts = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user.id;
+
+    const { page = 1, limit = 15 } = req.query;
+
+    const pagination = getPagination(
+      Number(page) || 1,
+      Number(limit) || 15
+    );
+
+    const { posts, total } =
+      await displayRecommendedPostsService(
+        userId,
+        pagination.page,
+        pagination.limit
+      );
+
+    return paginationResponse(
+      res,
+      "Recommended posts retrieved successfully",
+      posts,
+      pagination.page,
+      pagination.limit,
+      total,
+      200
+    );
+  }
+);

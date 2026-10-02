@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import {
   createPostRepository,
   deletePostRepository,
+  displayRecommendedPostsRepository,
   findPostByIdRepository,
   findPostsRepository,
   updatePostRepository,
@@ -691,4 +692,60 @@ export const displayPostsService = async (
     skip,
     limit
   );
+};
+
+
+import { findReportedPostIdsByUserRepository } from "../repositories/report.repository.ts";
+import { getUserLocation } from "../clients/user.clients.ts";
+
+
+export const displayRecommendedPostsService = async (
+  userId: string,
+  page: number,
+  limit: number
+) => {
+  // ==========================================
+  // 1. Get user location from Auth service
+  // ==========================================
+
+  const user = await getUserLocation(userId);
+
+  if (!user) {
+    throw ApiError.notFound(
+      "User profile not found"
+    );
+  }
+
+  if (
+    user.latitude === undefined ||
+    user.longitude === undefined
+  ) {
+    throw ApiError.badRequest(
+      "User location is not available"
+    );
+  }
+
+  // ==========================================
+  // 2. Get posts reported by this user
+  // ==========================================
+
+  const reportedPostIds =
+    await findReportedPostIdsByUserRepository(
+      userId
+    );
+
+  // ==========================================
+  // 3. Get recommended posts
+  // ==========================================
+
+  return await displayRecommendedPostsRepository({
+    userId,
+    latitude: user.latitude,
+    longitude: user.longitude,
+    district: user.district ?? "",
+    state: user.state ?? "",
+    reportedPostIds,
+    page,
+    limit,
+  });
 };

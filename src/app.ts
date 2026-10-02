@@ -4,6 +4,8 @@ import corsMiddleware from "./middlewares/cors.middleware.ts";
 import postRoutes from "./routes/post.routes.ts";
 import ApiError from "./utils/ApiError.ts";
 import errorMiddleware from "./middlewares/error.middleware.ts";
+import advertisementRoutes from "./routes/advertisement.routes.ts";
+import reportRoutes from "./routes/report.routes.ts";
 
 const app = express();
 
@@ -47,6 +49,8 @@ app.get("/post/health", (req : Request, res : Response) => {
 ============================== */
 
 app.use("/api/post", postRoutes);
+app.use("/api/advertisement", advertisementRoutes);
+app.use("/api/report", reportRoutes);
 
 /* ==============================
    404 Handler

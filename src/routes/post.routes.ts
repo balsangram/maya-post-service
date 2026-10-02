@@ -8,8 +8,12 @@ import {
   createPost,
   deletePost,
   displayPosts,
+  displayRecommendedPosts,
   editPost,
+  searchPosts,
 } from "../controllers/post.controller.ts";
+import { likePost, unlikePost } from "../controllers/like.controller.ts";
+import { addComment, deleteComment, displayComments } from "../controllers/comment.controller.ts";
 
 const router = express.Router();
 
@@ -74,6 +78,81 @@ router.get(
   authMiddleware,
   authorize("User"),
   displayPosts
+);
+
+// ==============================
+// Recommended Posts
+// ==============================
+
+router.get(
+  "/v1/recommended",
+  authMiddleware,
+  authorize("User"),
+  displayRecommendedPosts
+);
+
+// ==============================
+// Search Posts
+// ==============================
+
+router.get(
+  "/v1/search",
+  authMiddleware,
+  authorize("User"),
+  searchPosts
+);
+
+// ==============================
+// Like Post
+// ==============================
+
+router.post(
+  "/v1/:postId/like",
+  authMiddleware,
+  authorize("User"),
+  likePost
+);
+
+// ==============================
+// Unlike Post
+// ==============================
+
+router.delete(
+  "/v1/:postId/like",
+  authMiddleware,
+  authorize("User"),
+  unlikePost
+);
+
+// ==============================
+// Add Comment
+// ==============================
+
+router.post(
+  "/v1/:postId/comment",
+  authMiddleware,
+  authorize("User"),
+  addComment
+);
+
+// ==============================
+// Delete Comment
+// ==============================
+
+router.delete(
+  "/v1/:postId/comment/:commentId",
+  authMiddleware,
+  authorize("User"),
+  deleteComment
+);
+
+// display comments
+
+router.get(
+  "/v1/:postId/comments",
+  authMiddleware,
+  authorize("User"),
+  displayComments
 );
 
 export default router;
