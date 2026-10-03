@@ -715,15 +715,14 @@ export const displayRecommendedPostsService = async (
       "User profile not found"
     );
   }
-
-  if (
-    user.latitude === undefined ||
-    user.longitude === undefined
-  ) {
-    throw ApiError.badRequest(
-      "User location is not available"
-    );
-  }
+  const latitude =
+    typeof user.latitude === "number" ? user.latitude : undefined;
+  const longitude =
+    typeof user.longitude === "number" ? user.longitude : undefined;
+  const pin = user.pin?.trim() || undefined;
+  const district = user.district?.trim() || "";
+  const state = user.state?.trim() || "";
+  const city = user.city?.trim() || "";
 
   // ==========================================
   // 2. Get posts reported by this user
@@ -740,10 +739,12 @@ export const displayRecommendedPostsService = async (
 
   return await displayRecommendedPostsRepository({
     userId,
-    latitude: user.latitude,
-    longitude: user.longitude,
-    district: user.district ?? "",
-    state: user.state ?? "",
+    latitude,
+    longitude,
+    pin,
+    district,
+    state,
+    city,
     reportedPostIds,
     page,
     limit,

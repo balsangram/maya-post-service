@@ -26,8 +26,11 @@ export interface IUserLocation {
   latitude?: number;
   longitude?: number;
 
+  pin?: string;
   district?: string;
   state?: string;
+  country?: string;
+  city?: string;
 }
 
 interface ApiResponse<T> {

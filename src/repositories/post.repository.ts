@@ -125,10 +125,12 @@ export const searchPostsRepository = async (
 
 interface RecommendedPostParams {
   userId: string;
-  latitude: number;
-  longitude: number;
-  district: string;
-  state: string;
+  latitude?: number;
+  longitude?: number;
+  pin?: string;
+  district?: string;
+  state?: string;
+  city?: string;
   reportedPostIds: Types.ObjectId[];
   page: number;
   limit: number;
@@ -138,13 +140,26 @@ export const displayRecommendedPostsRepository = async ({
   userId,
   latitude,
   longitude,
-  district,
-  state,
+  pin,
+  district = "",
+  state = "",
+  city = "",
   reportedPostIds,
   page = 1,
   limit = 15,
 }: RecommendedPostParams) => {
   const skip = (page - 1) * limit;
+
+  const hasCoordinates =
+    typeof latitude === "number" && typeof longitude === "number";
+  const userPin = typeof pin === "string" ? pin.trim() : "";
+  const userDistrict = typeof district === "string" ? district.trim().toLowerCase() : "";
+  const userState = typeof state === "string" ? state.trim().toLowerCase() : "";
+  const userCity = typeof city === "string" ? city.trim().toLowerCase() : "";
+
+  const userObjectId = Types.ObjectId.isValid(userId)
+    ? new Types.ObjectId(userId)
+    : null;
 
   const result = await Post.aggregate([
     // ==========================================
@@ -162,109 +177,216 @@ export const displayRecommendedPostsRepository = async ({
 
         // Don't show posts already liked
         "likes.userId": {
-          $ne: userId,
+          $nin: userObjectId ? [userObjectId, userId] : [userId],
         },
 
         // Don't show posts already commented
         "comments.userId": {
-          $ne: userId,
+          $nin: userObjectId ? [userObjectId, userId] : [userId],
         },
       },
     },
 
     // ==========================================
-    // 2. Calculate distance
+    // 2. Calculate distance and match fields
     // ==========================================
 
     {
       $addFields: {
-        distance: {
-          $sqrt: {
-            $add: [
-              {
-                $pow: [
-                  {
-                    $subtract: [
+        distance: hasCoordinates
+          ? {
+              $cond: [
+                {
+                  $and: [
+                    { $isArray: "$location.coordinates" },
+                    { $eq: [{ $size: "$location.coordinates" }, 2] },
+                  ],
+                },
+                {
+                  $sqrt: {
+                    $add: [
                       {
-                        $arrayElemAt: [
-                          "$location.coordinates",
-                          1,
+                        $pow: [
+                          {
+                            $subtract: [
+                              {
+                                $arrayElemAt: [
+                                  "$location.coordinates",
+                                  1,
+                                ],
+                              },
+                              latitude,
+                            ],
+                          },
+                          2,
                         ],
                       },
-                      latitude,
-                    ],
-                  },
-                  2,
-                ],
-              },
 
-              {
-                $pow: [
-                  {
-                    $subtract: [
                       {
-                        $arrayElemAt: [
-                          "$location.coordinates",
-                          0,
+                        $pow: [
+                          {
+                            $subtract: [
+                              {
+                                $arrayElemAt: [
+                                  "$location.coordinates",
+                                  0,
+                                ],
+                              },
+                              longitude,
+                            ],
+                          },
+                          2,
                         ],
                       },
-                      longitude,
                     ],
                   },
-                  2,
-                ],
-              },
-            ],
-          },
-        },
+                },
+                null,
+              ],
+            }
+          : null,
+
+        // ========================================
+        // Same pin
+        // ========================================
+
+        samePin: userPin
+          ? {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$location.pin", userPin] },
+                    { $eq: ["$pin", userPin] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            }
+          : 0,
 
         // ========================================
         // Same district
         // ========================================
 
-        sameDistrict: {
-          $cond: [
-            {
-              $eq: [
+        sameDistrict: userDistrict
+          ? {
+              $cond: [
                 {
-                  $toLower: {
-                    $ifNull: [
-                      "$location.district",
-                      "",
-                    ],
-                  },
+                  $or: [
+                    {
+                      $and: [
+                        { $ne: ["$location.district", null] },
+                        { $ne: ["$location.district", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$location.district" },
+                            userDistrict,
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $ne: ["$district", null] },
+                        { $ne: ["$district", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$district" },
+                            userDistrict,
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 },
-                district.toLowerCase(),
+                1,
+                0,
               ],
-            },
-            1,
-            0,
-          ],
-        },
+            }
+          : 0,
+
+        // ========================================
+        // Same city
+        // ========================================
+
+        sameCity: userCity
+          ? {
+              $cond: [
+                {
+                  $or: [
+                    {
+                      $and: [
+                        { $ne: ["$location.city", null] },
+                        { $ne: ["$location.city", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$location.city" },
+                            userCity,
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $ne: ["$city", null] },
+                        { $ne: ["$city", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$city" },
+                            userCity,
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                1,
+                0,
+              ],
+            }
+          : 0,
 
         // ========================================
         // Same state
         // ========================================
 
-        sameState: {
-          $cond: [
-            {
-              $eq: [
+        sameState: userState
+          ? {
+              $cond: [
                 {
-                  $toLower: {
-                    $ifNull: [
-                      "$location.state",
-                      "",
-                    ],
-                  },
+                  $or: [
+                    {
+                      $and: [
+                        { $ne: ["$location.state", null] },
+                        { $ne: ["$location.state", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$location.state" },
+                            userState,
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $ne: ["$state", null] },
+                        { $ne: ["$state", ""] },
+                        {
+                          $eq: [
+                            { $toLower: "$state" },
+                            userState,
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 },
-                state.toLowerCase(),
+                1,
+                0,
               ],
-            },
-            1,
-            0,
-          ],
-        },
+            }
+          : 0,
 
         // ========================================
         // Like count
@@ -296,6 +418,22 @@ export const displayRecommendedPostsRepository = async ({
       $addFields: {
         recommendationScore: {
           $add: [
+            // Same PIN: highest priority local match
+            {
+              $multiply: [
+                "$samePin",
+                200000,
+              ],
+            },
+
+            // Same city
+            {
+              $multiply: [
+                "$sameCity",
+                150000,
+              ],
+            },
+
             // Same district
             {
               $multiply: [
@@ -329,6 +467,10 @@ export const displayRecommendedPostsRepository = async ({
             },
           ],
         },
+
+        hasDistance: {
+          $cond: [{ $ne: ["$distance", null] }, 1, 0],
+        },
       },
     },
 
@@ -341,7 +483,8 @@ export const displayRecommendedPostsRepository = async ({
         // Recommendation priority
         recommendationScore: -1,
 
-        // Nearest
+        // Nearest distance when available
+        hasDistance: -1,
         distance: 1,
 
         // More likes
