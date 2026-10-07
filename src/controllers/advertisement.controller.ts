@@ -16,19 +16,16 @@ export const addAdvertisement = asyncHandler(
       throw ApiError.badRequest("Advertisement image is required");
     }
 
-    // Upload image to Cloudinary
     const uploadedImage = await uploadToCloudinary(
       req.file,
       "advertisements"
     );
 
-    // Prepare advertisement data
     const advertisementData = {
-      ...req.body,
       advImg: uploadedImage.url,
+      advImgPublicId: uploadedImage.publicId,
     };
 
-    // Save advertisement in database
     const newAdvertisement =
       await createAdvertisementRepository(advertisementData);
 

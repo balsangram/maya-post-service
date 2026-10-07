@@ -107,7 +107,7 @@ router.get(
 // ==============================
 
 router.post(
-  "/v1/:postId/like",
+  "/v1/:postId/like", 
   authMiddleware,
   authorize("User"),
   likePost
