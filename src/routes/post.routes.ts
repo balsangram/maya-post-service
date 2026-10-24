@@ -7,6 +7,7 @@ import upload from "../middlewares/upload.middleware.ts";
 import {
   createPost,
   deletePost,
+  displayMapPosts,
   displayPosts,
   displayRecommendedPosts,
   editPost,
@@ -72,13 +73,20 @@ router.delete(
 // ==============================
 // Display Posts
 // ==============================
-
+router.get(
+  "/v1/map",
+  authMiddleware,
+  authorize("User"),
+  displayMapPosts
+);
 router.get(
   "/v1",
   authMiddleware,
   authorize("User"),
   displayPosts
 );
+
+
 
 // ==============================
 // Recommended Posts

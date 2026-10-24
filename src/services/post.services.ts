@@ -15,6 +15,7 @@ import {
 } from "../utils/cloudinary.ts";
 
 import ApiError from "../utils/ApiError.ts";
+import { getUserLocation } from "../clients/user.clients.ts";
 
 // ======================================================
 // Types
@@ -180,6 +181,34 @@ export const createPostService = async (
     // Create MongoDB Post
     // ------------------------------------------
 
+    // ------------------------------------------
+    // Resolve post location
+    // ------------------------------------------
+
+    let postLocation: any = postData.location;
+
+    if (!postLocation || !Array.isArray(postLocation.coordinates)) {
+      try {
+        const userLocation = await getUserLocation(userId);
+        if (userLocation) {
+          postLocation = {
+            type: "Point",
+            coordinates: [
+              typeof userLocation.longitude === "number" ? userLocation.longitude : 0,
+              typeof userLocation.latitude === "number" ? userLocation.latitude : 0,
+            ],
+            pin: userLocation.pin || "",
+            district: userLocation.district || "",
+            city: userLocation.city || "",
+            state: userLocation.state || "",
+            country: userLocation.country || "",
+          };
+        }
+      } catch {
+        // Continue if user location fetch fails
+      }
+    }
+
     const post = await createPostRepository({
       userId,
 
@@ -192,6 +221,8 @@ export const createPostService = async (
         typeof postData.locationLink === "string"
           ? postData.locationLink.trim()
           : "",
+
+      location: postLocation,
 
       food: postData.food,
 
@@ -696,7 +727,6 @@ export const displayPostsService = async (
 
 
 import { findReportedPostIdsByUserRepository } from "../repositories/report.repository.ts";
-import { getUserLocation } from "../clients/user.clients.ts";
 
 
 export const displayRecommendedPostsService = async (

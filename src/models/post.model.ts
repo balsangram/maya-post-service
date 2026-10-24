@@ -37,11 +37,22 @@ export interface IPostComment {
    Post
 ========================= */
 
+export interface IPostLocation {
+  type: "Point";
+  coordinates: number[];
+  pin?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
+
 export interface IPost {
   userId: Types.ObjectId;
 
   description: string;
   locationLink: string;
+  location?: IPostLocation;
 
   food: "veg" | "nonveg" | "all";
 
@@ -175,6 +186,43 @@ const postSchema = new Schema<IPostDocument>(
       trim: true,
     },
 
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
+      pin: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+      district: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+      city: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+      state: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+      country: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+    },
+
     food: {
       type: String,
       enum: ["veg", "nonveg", "all"],
@@ -264,6 +312,8 @@ const postSchema = new Schema<IPostDocument>(
     timestamps: true,
   }
 );
+
+postSchema.index({ location: "2dsphere" });
 
 const Post: Model<IPostDocument> =
   mongoose.model<IPostDocument>("Post", postSchema);

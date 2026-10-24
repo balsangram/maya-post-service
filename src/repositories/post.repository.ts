@@ -122,6 +122,82 @@ export const searchPostsRepository = async (
 }
 
 
+export const displayMapPostsRepository = async (
+  userId: string,
+  latitude?: number,
+  longitude?: number,
+  radiusKm = 10,
+  page = 1,
+  limit = 10,
+  includeOwn = false
+) => {
+  const hasCoordinates =
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    !(latitude === 0 && longitude === 0);
+
+  const query: any = {
+    isActive: true,
+  };
+
+  if (!includeOwn) {
+    query.userId = { $ne: userId };
+  }
+
+  if (hasCoordinates) {
+    query.location = {
+      $geoWithin: {
+        $centerSphere: [
+          [longitude, latitude],
+          radiusKm / 6378.1,
+        ],
+      },
+    };
+  }
+
+  let [posts, total] = await Promise.all([
+    Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Post.countDocuments(query),
+  ]);
+
+  // Fallback: if no posts found with userId != currentUser and caller didn't explicitly request includeOwn,
+  // check all active posts so single-user/development testing still returns data
+  if (total === 0 && !includeOwn) {
+    const fallbackQuery: any = { isActive: true };
+    if (hasCoordinates) {
+      fallbackQuery.location = {
+        $geoWithin: {
+          $centerSphere: [
+            [longitude, latitude],
+            radiusKm / 6378.1,
+          ],
+        },
+      };
+    }
+
+    const [fallbackPosts, fallbackTotal] = await Promise.all([
+      Post.find(fallbackQuery)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Post.countDocuments(fallbackQuery),
+    ]);
+
+    if (fallbackTotal > 0) {
+      posts = fallbackPosts;
+      total = fallbackTotal;
+    }
+  }
+
+  return { posts, total };
+};
 
 interface RecommendedPostParams {
   userId: string;
